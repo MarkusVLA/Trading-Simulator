@@ -31,18 +31,14 @@ class TradeFrame:
 
         print(f"upsert: {datetime}")
 
-        # Check if the datetime exists in the DataFrame
         row_indices = self.frame[self.frame['Datetime'] == datetime].index
 
         if not row_indices.empty:
-            # If row exists, update it
             for row_index in row_indices:
                 for key, value in kwargs.items():
                     self.frame.at[row_index, key] = value
         else:
-            # If row does not exist, create and insert a new row
             new_row_data = {'Datetime': datetime}
-            # Ensure only columns other than 'Datetime' are considered for additional data
             for key, value in kwargs.items():
                 if key in self.frame.columns and key != 'Datetime':
                     new_row_data[key] = value
