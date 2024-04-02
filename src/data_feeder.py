@@ -3,10 +3,6 @@ import pandas as pd
 import yfinance as yf
 
 
-def fetch_stock_data(symbol, start_date, end_date, interval):
-    data = yf.download(symbol, start=start_date, end=end_date, interval=interval)
-    return data
-
 class DataFeeder:
     
     def __init__(self, symbol:str, start:str, end:str, interval:str):

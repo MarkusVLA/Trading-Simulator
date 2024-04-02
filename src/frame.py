@@ -2,11 +2,10 @@ import pandas as pd
 
 class TradeFrame:
     
-    def __init__(self, time=15) -> None:
-        self.time = time
-        self.columns = ['Datetime', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Signal', 'Capital']
-        self.data = {column: [] for column in self.columns}
-        self.frame = pd.DataFrame(data=self.data)
+
+    def __init__(self):
+        self.columns = ['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume', 'Signal', 'Capital', 'Holding']
+        self.frame = pd.DataFrame(columns=self.columns)
 
     def getFrame(self):
         return self.frame
@@ -23,28 +22,36 @@ class TradeFrame:
         self.frame.to_json(path, orient='records', date_format='iso')
         return True
 
-    def addRow(self, row:list):
-        row_with_default_signal = row + [None, None]  # Default signal value
-        if len(row_with_default_signal) != len(self.columns):
-            print("Error: The row does not have the correct number of elements.")
-            return False
+    def upsertRow(self, datetime: str, **kwargs):
+        """
+        Update an existing row with the given datetime if it exists, 
+        or insert a new row if it doesn't. Additional data for the row 
+        can be provided as keyword arguments.
+        """
 
-        new_row_df = pd.DataFrame([row_with_default_signal], columns=self.columns)
-        self.frame = pd.concat([self.frame, new_row_df], ignore_index=True)
-        return True
-    
+        print(f"upsert: {datetime}")
 
-    def updateActions(self, datetime:str, signal:int, capital:int):
+        # Check if the datetime exists in the DataFrame
         row_indices = self.frame[self.frame['Datetime'] == datetime].index
+
         if not row_indices.empty:
+            # If row exists, update it
             for row_index in row_indices:
-                self.frame.at[row_index, 'Signal'] = signal
-                self.frame.at[row_index, 'Capital'] = capital
-            return True
+                for key, value in kwargs.items():
+                    self.frame.at[row_index, key] = value
         else:
-            print(f"Error: No row found with the specified datetime {datetime}.")
-            return False
+            # If row does not exist, create and insert a new row
+            new_row_data = {'Datetime': datetime}
+            # Ensure only columns other than 'Datetime' are considered for additional data
+            for key, value in kwargs.items():
+                if key in self.frame.columns and key != 'Datetime':
+                    new_row_data[key] = value
+
+            new_row_df = pd.DataFrame([new_row_data])
+            self.frame = pd.concat([self.frame, new_row_df], ignore_index=True)
         
+        return True
+
 
     
     def loadFrame(self, path:str):

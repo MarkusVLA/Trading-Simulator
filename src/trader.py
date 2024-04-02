@@ -22,39 +22,56 @@ class Trader:
     def getLiveDataFrame(self):
         return list(self.threads.values())[0].getTradeFrame()
     
-    def setCapitalInFrame(self):
-        list(self.threads.values())[0].getTradeFrame().se
-
-
     def saveActions(self):
         for trader in self.threads.values():
             trader.exportFrame()
-    
-    def distributeData(self, stock: str, datetime: str, open_price, high_price, low_price, close_price, adj_close_price, volume):
+
+
+    def distributeData(self, stock: str, **kwargs):
         if stock in self.threads.keys():
-            row = [datetime, open_price, high_price, low_price, close_price, adj_close_price, volume]
-            signal = self.threads[stock].addRowAndDecide(row, self.calculateTotalValue())
-            self.actOnSignal(stock, signal, close_price)
+            datetime = kwargs.get('Datetime') 
+            if datetime is None:
+                print("Datetime is required.")
+                return False
+            del kwargs['Datetime']
+
+            if not self.threads[stock].updateFrame(datetime, **kwargs):
+                print(f"Failed to update frame for stock: {stock}")
+                return
+
+            signal = self.threads[stock].getSignal() # Signal from algo
+            action = self.actOnSignal(stock, signal) # Action by bot
+
+            self.threads[stock].updateFrame(datetime, Signal = action, Capital = self.calculateTotalValue(), Holding = self.stocks_owned[stock])
+
         else:
             print(f"No trader found for stock: {stock}, unable to distribute data.")
-        
 
-    def actOnSignal(self, stock: str, signal: int, price: float):
 
-        shares_to_transact = 1
-        transaction_cost = price * shares_to_transact
+    def actOnSignal(self, stock:str, signal):
+
+        shares_to_transact = 1 ## Add logic to chose how many.
+        last_close_price = self.threads[stock].getLastClosePrice()
+        transaction_cost = last_close_price * shares_to_transact
 
         if signal == 1 and self.change >= transaction_cost:
             self.change -= transaction_cost
             self.stocks_owned[stock] += shares_to_transact
+            return 1
         elif signal == 2 and self.stocks_owned[stock] > 0:
             self.change += transaction_cost
             self.stocks_owned[stock] -= shares_to_transact
+            return 2
+        else:
+            return 0
+        
 
-    
     def calculateTotalValue(self):
         total_value = self.change
         for stock, quantity in self.stocks_owned.items():
             current_price = self.threads[stock].getLastClosePrice() if stock in self.threads else 0
             total_value += current_price * quantity if current_price else 0
         return total_value
+    
+    def getHolding(self, symbol:str):
+        return self.stocks_owned[symbol]
