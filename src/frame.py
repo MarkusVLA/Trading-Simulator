@@ -2,24 +2,30 @@ import pandas as pd
 
 class TradeFrame:
     
-
     def __init__(self):
-        self.columns = ['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume', 'Signal', 'Capital', 'Holding']
+        self.columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Signal', 'Capital', 'Holding']
+        # Initialize DataFrame with DatetimeIndex
         self.frame = pd.DataFrame(columns=self.columns)
+        self.frame.index.name = 'Datetime'
 
     def getFrame(self):
         return self.frame
     
     def getLastRow(self):
-        if not self.frame.empty: return self.frame.tail(1)
-        else: return None
+        if not self.frame.empty: 
+            return self.frame.iloc[-1:]
+        else: 
+            return None
     
     def setFrame(self, dataF: pd.DataFrame):
         self.frame = dataF
+        if 'Datetime' not in self.frame.columns:
+            self.frame.index.name = 'Datetime'
         return True
 
     def exportFrame(self, path:str):
-        self.frame.to_json(path, orient='records', date_format='iso')
+        # When exporting, include the index (Datetime) in the export
+        self.frame.to_json(path, orient='index', date_format='iso')
         return True
 
     def upsertRow(self, datetime: str, **kwargs):
@@ -30,28 +36,28 @@ class TradeFrame:
         """
 
         print(f"upsert: {datetime}")
-
-        row_indices = self.frame[self.frame['Datetime'] == datetime].index
-
-        if not row_indices.empty:
-            for row_index in row_indices:
-                for key, value in kwargs.items():
-                    self.frame.at[row_index, key] = value
-        else:
-            new_row_data = {'Datetime': datetime}
+        
+        if datetime in self.frame.index:
+            # Update existing row
             for key, value in kwargs.items():
-                if key in self.frame.columns and key != 'Datetime':
+                if key in self.frame.columns:
+                    self.frame.at[datetime, key] = value
+        else:
+            # Insert new row
+            new_row_data = {}
+            for key, value in kwargs.items():
+                if key in self.columns:  # Ensure 'Datetime' is not in columns
                     new_row_data[key] = value
 
-            new_row_df = pd.DataFrame([new_row_data])
-            self.frame = pd.concat([self.frame, new_row_df], ignore_index=True)
+            # Append the new row to the DataFrame
+            self.frame = self.frame.append(pd.DataFrame([new_row_data], index=[pd.to_datetime(datetime)]))
         
         return True
 
-
-    
     def loadFrame(self, path:str):
-        self.frame = pd.read_json(path, convert_dates=['Datetime'])
+        # Ensure that 'Datetime' is considered the index when loading
+        self.frame = pd.read_json(path, convert_dates=['Datetime'], orient='index')
+        self.frame.index.name = 'Datetime'
         return True
 
     def __str__(self) -> str:

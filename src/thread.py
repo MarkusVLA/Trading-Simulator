@@ -3,13 +3,14 @@ from random import randint
 from frame import TradeFrame
 from datetime import datetime
 from strategy import *
+from random import randint
 
 class Thread:
 
     def __init__(self, stock_name:str):
         self.stock_name = stock_name
         self.frame = TradeFrame()
-        self.time = datetime.now()
+        self.time = datetime.today()
 
     def getStockName(self) -> str:
         return self.stock_name
@@ -40,6 +41,6 @@ class Thread:
             return False
         return True
 
-
     def getSignal(self):
         return applyFourierTransform(self.frame.getFrame())
+        # return randint(0,2)

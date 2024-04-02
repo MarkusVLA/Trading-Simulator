@@ -1,4 +1,6 @@
 from thread import Thread
+from random import randint
+
 
 class Trader:
 
@@ -41,8 +43,12 @@ class Trader:
 
             signal = self.threads[stock].getSignal() # Signal from algo
             action = self.actOnSignal(stock, signal) # Action by bot
-
-            self.threads[stock].updateFrame(datetime, Signal = action, Capital = self.calculateTotalValue(), Holding = self.stocks_owned[stock])
+            self.threads[stock].updateFrame(
+                datetime, 
+                Signal = action,
+                Capital = self.calculateTotalValue(),
+                Holding = self.stocks_owned[stock]
+            ) 
 
         else:
             print(f"No trader found for stock: {stock}, unable to distribute data.")
@@ -58,10 +64,12 @@ class Trader:
             self.change -= transaction_cost
             self.stocks_owned[stock] += shares_to_transact
             return 1
+        
         elif signal == 2 and self.stocks_owned[stock] > 0:
             self.change += transaction_cost
             self.stocks_owned[stock] -= shares_to_transact
             return 2
+        
         else:
             return 0
         
