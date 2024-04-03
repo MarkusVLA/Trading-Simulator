@@ -1,4 +1,3 @@
-
 import pandas as pd
 import yfinance as yf
 
@@ -10,8 +9,9 @@ class DataFeeder:
         self.symbol = symbol
         self.start_date = start
         self.end_date = end
+        self.current_index = 0
         self.data = yf.download(self.symbol, start=self.start_date, end=self.end_date, interval=interval)
-        self.current_index = 0 
+     
 
     def getNextRow(self):
         if self.current_index < len(self.data):

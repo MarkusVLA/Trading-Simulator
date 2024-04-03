@@ -7,10 +7,10 @@ from random import randint
 
 class Thread:
 
-    def __init__(self, stock_name:str):
+    def __init__(self, stock_name: str):
         self.stock_name = stock_name
         self.frame = TradeFrame()
-        self.time = datetime.today()
+        self.time = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
 
     def getStockName(self) -> str:
         return self.stock_name
@@ -24,7 +24,7 @@ class Thread:
     def exportFrame(self):
         self.frame.exportFrame(f"tmp/{self.stock_name}_trade_frame_{self.time}.json")
     
-    def loadFrame(self, path:str):
+    def loadFrame(self, path: str):
         self.frame.loadFrame(path)    
     
     def getLastClosePrice(self):
@@ -43,4 +43,3 @@ class Thread:
 
     def getSignal(self):
         return applyFourierTransform(self.frame.getFrame())
-        # return randint(0,2)

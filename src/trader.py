@@ -56,8 +56,8 @@ class Trader:
 
     def actOnSignal(self, stock:str, signal):
 
-        shares_to_transact = 1 ## Add logic to chose how many.
         last_close_price = self.threads[stock].getLastClosePrice()
+        shares_to_transact =  int(self.change * 0.80 / last_close_price)
         transaction_cost = last_close_price * shares_to_transact
 
         if signal == 1 and self.change >= transaction_cost:

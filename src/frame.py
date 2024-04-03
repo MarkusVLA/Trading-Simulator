@@ -4,7 +4,6 @@ class TradeFrame:
     
     def __init__(self):
         self.columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Signal', 'Capital', 'Holding']
-        # Initialize DataFrame with DatetimeIndex
         self.frame = pd.DataFrame(columns=self.columns)
         self.frame.index.name = 'Datetime'
 
@@ -24,7 +23,6 @@ class TradeFrame:
         return True
 
     def exportFrame(self, path:str):
-        # When exporting, include the index (Datetime) in the export
         self.frame.to_json(path, orient='index', date_format='iso')
         return True
 
@@ -34,8 +32,6 @@ class TradeFrame:
         or insert a new row if it doesn't. Additional data for the row 
         can be provided as keyword arguments.
         """
-
-        print(f"upsert: {datetime}")
         
         if datetime in self.frame.index:
             # Update existing row
@@ -43,19 +39,18 @@ class TradeFrame:
                 if key in self.frame.columns:
                     self.frame.at[datetime, key] = value
         else:
-            # Insert new row
-            new_row_data = {}
-            for key, value in kwargs.items():
-                if key in self.columns:  # Ensure 'Datetime' is not in columns
-                    new_row_data[key] = value
-
-            # Append the new row to the DataFrame
-            self.frame = self.frame.append(pd.DataFrame([new_row_data], index=[pd.to_datetime(datetime)]))
-        
+            new_row_data = {key: value for key, value in kwargs.items() if key in self.columns}
+            new_row_df = pd.DataFrame([new_row_data], index=[pd.to_datetime(datetime)])
+            new_row_df = new_row_df.dropna(axis=1, how='all') 
+            new_row_df = new_row_df.fillna(0)  
+            for col in self.frame.columns:
+                if col not in new_row_df:
+                    new_row_df[col] = 0  
+            self.frame = pd.concat([self.frame, new_row_df[self.frame.columns]])
         return True
+    
 
     def loadFrame(self, path:str):
-        # Ensure that 'Datetime' is considered the index when loading
         self.frame = pd.read_json(path, convert_dates=['Datetime'], orient='index')
         self.frame.index.name = 'Datetime'
         return True

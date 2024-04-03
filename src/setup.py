@@ -1,0 +1,27 @@
+import matplotlib.pyplot as plt
+
+plt.rcParams.update({
+    'figure.facecolor': '#313231',  
+    'axes.facecolor': '#313231', 
+    'axes.edgecolor': 'white',
+    'axes.labelcolor': 'white',
+    'axes.grid': True,  
+    'grid.alpha': 0.3,  
+    'grid.color': "white",  
+    'grid.linestyle': '--',  
+    'grid.linewidth': 0.6,  
+    'text.color': 'white',
+    'xtick.color': 'white',
+    'xtick.direction': 'out',
+    'ytick.direction': 'out',
+    'ytick.color': 'white',
+    'figure.titleweight': 'bold',
+    'figure.titlesize': 'large',
+    'legend.edgecolor': 'white',
+    'legend.facecolor': '#313231',
+    'legend.framealpha': 0.6,
+    'legend.fontsize': 'medium',
+    'lines.linewidth': 2,
+    'lines.markersize': 7,
+    'scatter.edgecolors': 'white',
+})
