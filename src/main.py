@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
 from PyQt5.QtCore import QTimer, Qt
 from data_feeder import DataFeeder
 from trader import Trader
-from setup import *
 from plot_canvas import MarketPlotCanvas
 
 
