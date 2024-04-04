@@ -7,6 +7,9 @@ def applyFourierTransform(df):
     """
     Apply Fourier Transform to the closing prices to identify dominant frequencies.
     """
+
+    df = df # Copy df
+    
     if len(df) < 20:
         return 0
     

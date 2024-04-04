@@ -12,9 +12,9 @@ Python-based application that simulates stock trading. It uses historical data t
 ## Dashboard
 ![Dashboard Preview](img/img.png)
 
-## Libraries used
+## Libraries
 
-- PyQt5 for the GUI
-- Pandas for data handling
-- Matplotlib and mplfinance for visualization
-- yfinance for data acquisition
+- PyQt5
+- Pandas
+- pyqtgraph
+- yfinance
