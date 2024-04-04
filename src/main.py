@@ -27,6 +27,7 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout()
         main_layout.addLayout(right_layout)
         self.symbol_input = QLineEdit("AAPL", self)
+        self.start_capital = QLineEdit("1000", self)
         self.start_input = QLineEdit("2024-03-20", self)
         self.end_input = QLineEdit("2024-03-21", self)
         self.time_frame_input = QComboBox(self)
@@ -36,6 +37,9 @@ class MainWindow(QMainWindow):
 
         left_layout.addWidget(QLabel("Symbol:"))
         left_layout.addWidget(self.symbol_input)
+        left_layout.addWidget(QLabel("Starting capital:"))
+        left_layout.addWidget(self.start_capital)
+
         left_layout.addWidget(QLabel("Start Date (YYYY-MM-DD):"))
         left_layout.addWidget(self.start_input)
         left_layout.addWidget(QLabel("End Date (YYYY-MM-DD):"))
@@ -59,10 +63,8 @@ class MainWindow(QMainWindow):
 
         self.info_label = QLabel("Holding: \nTotal Value: ", self)
         left_layout.addWidget(self.info_label)
-        self.start_simulation_button = QPushButton('Start Simulation', self)
-        self.start_simulation_button.clicked.connect(self.start_simulation)
-        self.start_simulation_button.setEnabled(False)
-        left_layout.addWidget(self.start_simulation_button)
+        
+
 
         self.text_window = QTextEdit(self)
         self.text_window.setReadOnly(True)
@@ -82,17 +84,20 @@ class MainWindow(QMainWindow):
             start_date = self.start_input.text()
             end_date = self.end_input.text()
             time_frame = self.time_frame_input.currentText()
+            starting_capital = float(self.start_capital.text())
 
             self.data_feeder = DataFeeder(symbol, start_date, end_date, time_frame)
             if self.data_feeder.data.empty:
                 self.text_window.append(f"Error loading data for {symbol}")
                 return
 
-            self.manager = Trader(initial_capital=10000.0)
+            self.manager = Trader(initial_capital=starting_capital)
             self.manager.addStock(symbol)
 
-            self.start_simulation_button.setEnabled(True)
+
             self.text_window.append("Data loaded successfully for symbol: {}".format(symbol))
+
+            self.start_simulation()
             
         except Exception as e:
             self.text_window.append("Error loading data: {}".format(str(e)))
@@ -135,7 +140,6 @@ class MainWindow(QMainWindow):
     def start_simulation(self):
         self.timer.setInterval(self.speed_slider.value())
         self.timer.start()
-        self.start_simulation_button.setEnabled(False)
 
     def adjust_speed(self, value):
         max_value = self.speed_slider.maximum()

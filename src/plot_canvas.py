@@ -34,5 +34,4 @@ class PlotCanvas(FigureCanvas):
             self.axes.scatter(buys.index, df.loc[buys.index, 'Capital'], color='green', label='Buy', marker='^', s=50, edgecolor='black', alpha=0.7)
             self.axes.scatter(sells.index, df.loc[sells.index, 'Capital'], color='red', label='Sell', marker='v', s=50, edgecolor='black', alpha=0.7)
             self.axes.set_ylabel('Capital')
-
         self.draw()

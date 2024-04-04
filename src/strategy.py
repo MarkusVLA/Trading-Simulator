@@ -28,4 +28,3 @@ def applyFourierTransform(df):
     elif df.iloc[-2]['reconstructed'] > df.iloc[-1]['reconstructed'] and df.iloc[-1]['Close'] > df.iloc[-1]['reconstructed']:
         return 2  
     return 0  
-
