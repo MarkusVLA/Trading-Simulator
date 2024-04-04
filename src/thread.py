@@ -42,4 +42,5 @@ class Thread:
         return True
 
     def getSignal(self):
-        return applyFourierTransform(self.frame.getFrame())
+        # return applyFourierTransform(self.frame.getFrame())
+        return randint(0,2)

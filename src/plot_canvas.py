@@ -1,37 +1,69 @@
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import mplfinance as mpf
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
+import pyqtgraph as pg
+from pyqtgraph import DateAxisItem
+import pandas as pd
+import numpy as np
+from candle_stick import CandlestickItem
+from PyQt5.QtGui import QFont, QColor
 
 
+class MarketPlotCanvas(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.initUI()
+    
+    def initUI(self):
+        # Main layout setup
+        self.mainLayout = QVBoxLayout()
+        self.setLayout(self.mainLayout)
 
-class PlotCanvas(FigureCanvas):
+        pg.setConfigOption('background', '#383838')
+        pg.setConfigOption('foreground', 'w')  
+        self.font = QFont('Segoe UI', 10)
+        self.plotWidget = self.createPlotWidget(DateAxisItem(orientation='bottom'))
+        self.volumePlotWidget = self.createPlotWidget(DateAxisItem(orientation='bottom'), max_height=300)
+        self.capitalPlotWidget = self.createPlotWidget(DateAxisItem(orientation='bottom'), max_height=300)
 
-    def __init__(self, parent=None, width=8, height=8, dpi=100, plot_type='Close'):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        self.plot_type = plot_type 
-        FigureCanvas.__init__(self, fig)
-        self.setParent(parent)
+        self.plotWidget.setXLink(self.volumePlotWidget)
+        self.volumePlotWidget.setXLink(self.capitalPlotWidget)
+
+
+    def createPlotWidget(self, axis, max_height=None):
+        plot_widget = pg.PlotWidget(axisItems={'bottom': axis})
+        plot_widget.showGrid(x=True, y=True, alpha=0.1)
+        plot_widget.getPlotItem().getAxis('left').tickFont = self.font
+        plot_widget.getPlotItem().getAxis('bottom').tickFont = self.font
+        plot_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        if max_height:
+            plot_widget.setMaximumHeight(max_height)
+        self.mainLayout.addWidget(plot_widget)
+        return plot_widget
 
     def plot(self, df):
-        df = df.tail(300)
-        self.axes.clear()
-        if self.plot_type == 'Close':
-            self.figure.clear()
-            ax1 = self.figure.add_subplot(111)
-            mpf.plot(df,
-                     type='candle', 
-                     style='yahoo',
-                     ax=ax1, 
-                     show_nontrading=False, 
-                     mav=(15), 
-                     volume=False)
+        self.reset()
 
-        elif self.plot_type == 'Capital':
-            self.axes.plot(df.index, df['Capital'], label='Capital', color='darkblue', linewidth=2, linestyle='-', alpha=0.8)
-            buys = df[df['Signal'] == 1]
-            sells = df[df['Signal'] == 2]
-            self.axes.scatter(buys.index, df.loc[buys.index, 'Capital'], color='green', label='Buy', marker='^', s=50, edgecolor='black', alpha=0.7)
-            self.axes.scatter(sells.index, df.loc[sells.index, 'Capital'], color='red', label='Sell', marker='v', s=50, edgecolor='black', alpha=0.7)
-            self.axes.set_ylabel('Capital')
-        self.draw()
+        time = pd.to_datetime(df.index).astype(np.int64) // 10**9
+        
+        candlestickData = []
+        
+        for t, row in zip(time, df.itertuples()):
+            candlestickData.append((t, row.Open, row.Close, row.Low, row.High))
+        candlestickItem = CandlestickItem(candlestickData)
+        self.plotWidget.addItem(candlestickItem)
+        
+        volumeBars = pg.BarGraphItem(x=time, height=df['Volume'].values, width=0.8 * (time[1] - time[0]), brush='b')
+        self.volumePlotWidget.addItem(volumeBars)
+
+        for signal, symbol, color in [(1, 't1', 'b'), (2, 't', 'r')]:
+            signals = df[df['Signal'] == signal]
+            signalTime = pd.to_datetime(signals.index).astype(np.int64) // 10**9
+            signalPrices = signals['Close'].values
+            offset = np.ones_like(signalPrices) * (0.2 if signal == 1 else -0.2)
+            self.plotWidget.plot(signalTime, signalPrices + offset, pen=None, symbol=symbol, symbolSize=10, symbolBrush=color)
+
+        self.capitalPlotWidget.plot(time, df['Capital'].astype(np.float64).values, pen='y')
+
+    def reset(self):
+        self.plotWidget.clear()
+        self.volumePlotWidget.clear()
+        self.capitalPlotWidget.clear()
