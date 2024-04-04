@@ -1,7 +1,7 @@
 
 # Stock Trading Simulator
 
-Python-based application that simulates stock trading within a graphical user interface (GUI). It uses historical data to test the performance of trades over time.
+Python-based application that simulates stock trading. It uses historical data to test the performance of trades over time.
 
 ## Features
 

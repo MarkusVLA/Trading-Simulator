@@ -18,7 +18,6 @@ class Trader:
         trade_frames = {}
         for stock, trader in self.threads.items():
             trade_frames[stock] = trader.getTradeFrame().getFrame()
-
         return trade_frames
     
     def getLiveDataFrame(self):
