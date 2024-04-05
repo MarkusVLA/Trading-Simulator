@@ -1,5 +1,3 @@
-import sys
-import matplotlib.dates as mdates
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, QSlider
 from PyQt5.QtCore import QTimer, Qt
 from data_feeder import DataFeeder
@@ -141,9 +139,3 @@ class MainWindow(QMainWindow):
         if self.timer.isActive():
             self.timer.start(interval)
 
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    main = MainWindow()
-    main.show()
-    sys.exit(app.exec_())

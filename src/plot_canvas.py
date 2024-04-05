@@ -4,7 +4,7 @@ from pyqtgraph import DateAxisItem
 import pandas as pd
 import numpy as np
 from candle_stick import CandlestickItem
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont
 
 
 class MarketPlotCanvas(QWidget):
