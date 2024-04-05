@@ -1,4 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
+from PyQt5.QtGui import QLinearGradient, QBrush, QColor, QPen
+from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 from pyqtgraph import DateAxisItem
 import pandas as pd
@@ -19,7 +21,7 @@ class MarketPlotCanvas(QWidget):
 
         pg.setConfigOption('background', '#383838')
         pg.setConfigOption('foreground', 'w')  
-        self.font = QFont('Segoe UI', 10)
+        self.font = QFont('Segoe UI', 20)
         self.plotWidget = self.createPlotWidget(DateAxisItem(orientation='bottom'))
         self.volumePlotWidget = self.createPlotWidget(DateAxisItem(orientation='bottom'), max_height=300)
         self.capitalPlotWidget = self.createPlotWidget(DateAxisItem(orientation='bottom'), max_height=300)
@@ -61,7 +63,14 @@ class MarketPlotCanvas(QWidget):
             offset = np.ones_like(signalPrices) * (0.2 if signal == 1 else -0.2)
             self.plotWidget.plot(signalTime, signalPrices + offset, pen=None, symbol=symbol, symbolSize=10, symbolBrush=color)
 
+        
+
         self.capitalPlotWidget.plot(time, df['Capital'].astype(np.float64).values, pen='y')
+
+
+
+
+
 
     def reset(self):
         self.plotWidget.clear()

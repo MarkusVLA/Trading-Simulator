@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, QSlider
 from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtGui import QFont
 from data_feeder import DataFeeder
 from trader import Trader
 from plot_canvas import MarketPlotCanvas
@@ -56,11 +57,15 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.market_plot)
 
         self.info_label = QLabel("Holding: \nTotal Value: ", self)
+        font = QFont() 
+        font.setPointSize(18)
+        self.info_label.setFont(font)
+
         left_layout.addWidget(self.info_label)
 
         self.text_window = QTextEdit(self)
         self.text_window.setReadOnly(True)
-        self.text_window.setMaximumWidth(400)  # Make the text window a bit smaller
+        self.text_window.setMaximumWidth(400)  
         right_layout.addWidget(self.text_window)
         self.data_feeder = None
         self.manager = None
@@ -134,8 +139,6 @@ class MainWindow(QMainWindow):
 
     def adjust_speed(self, value):
         max_value = self.speed_slider.maximum()
-        interval = max_value - value  
+        interval = max_value - value
         self.timer.setInterval(interval)
-        if self.timer.isActive():
-            self.timer.start(interval)
 
