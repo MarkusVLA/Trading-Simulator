@@ -142,3 +142,5 @@ class MainWindow(QMainWindow):
         interval = max_value - value
         self.timer.setInterval(interval)
 
+if __name__ == "__main__":
+    print("You are running the wrong file. Please run app.py")

@@ -11,11 +11,8 @@ class TradeFrame:
         return self.frame
     
     def getLastRow(self):
-        if not self.frame.empty: 
-            return self.frame.iloc[-1:]
-        else: 
-            return None
-    
+        return self.frame.iloc[-1:] if not self.frame.empty else None
+      
     def setFrame(self, dataF: pd.DataFrame):
         self.frame = dataF
         if 'Datetime' not in self.frame.columns:
