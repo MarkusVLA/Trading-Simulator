@@ -20,8 +20,8 @@ class Trader:
             trade_frames[stock] = trader.getTradeFrame().getFrame()
         return trade_frames
     
-    def getLiveDataFrame(self):
-        return list(self.threads.values())[0].getTradeFrame()
+    def getLiveDataFrame(self, symbol:str):
+        return self.threads[symbol].getTradeFrame().getFrame()
     
     def saveActions(self):
         for trader in self.threads.values():
@@ -42,6 +42,7 @@ class Trader:
 
             signal = self.threads[stock].getSignal() # Signal from algo
             action = self.actOnSignal(stock, signal) # Action by bot
+
             self.threads[stock].updateFrame(
                 datetime, 
                 Signal = action,

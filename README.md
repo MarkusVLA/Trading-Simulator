@@ -21,6 +21,6 @@ Python-based application that simulates stock trading. It uses historical data t
 
 ## TODO
 
-[ ] Fetch real time data
-[ ] Connect dataframe to database
-[ ] Varied timeframe trades on multiple stocks
+[] Fetch real time data
+[] Connect dataframe to database
+[] Varied timeframe trades on multiple stocks

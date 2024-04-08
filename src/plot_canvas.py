@@ -41,17 +41,23 @@ class MarketPlotCanvas(QWidget):
         self.mainLayout.addWidget(plot_widget)
         return plot_widget
 
-    def plot(self, df):
+    def plot(self, df, **kwargs):
         self.reset()
 
         time = pd.to_datetime(df.index).astype(np.int64) // 10**9
-        
+
         candlestickData = []
         
         for t, row in zip(time, df.itertuples()):
             candlestickData.append((t, row.Open, row.Close, row.Low, row.High))
         candlestickItem = CandlestickItem(candlestickData)
         self.plotWidget.addItem(candlestickItem)
+
+        if "mav" in kwargs:
+            mav_period = kwargs["mav"]
+            df['MAV'] = df['Close'].rolling(window=mav_period).mean()
+            self.plotWidget.plot(time, df['MAV'].values, pen=pg.mkPen('#C27BA0', width=4), name="MAV")
+
         
         volumeBars = pg.BarGraphItem(x=time, height=df['Volume'].values, width=0.8 * (time[1] - time[0]), brush='b')
         self.volumePlotWidget.addItem(volumeBars)
@@ -62,15 +68,7 @@ class MarketPlotCanvas(QWidget):
             signalPrices = signals['Close'].values
             offset = np.ones_like(signalPrices) * (0.2 if signal == 1 else -0.2)
             self.plotWidget.plot(signalTime, signalPrices + offset, pen=None, symbol=symbol, symbolSize=10, symbolBrush=color)
-
-        
-
         self.capitalPlotWidget.plot(time, df['Capital'].astype(np.float64).values, pen='y')
-
-
-
-
-
 
     def reset(self):
         self.plotWidget.clear()

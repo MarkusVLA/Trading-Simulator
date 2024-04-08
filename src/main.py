@@ -5,25 +5,21 @@ from data_feeder import DataFeeder
 from trader import Trader
 from plot_canvas import MarketPlotCanvas
 
-
-
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Trader simulator')
+        self.setWindowTitle('Trader Simulator')
         self.setGeometry(800, 100, 1200, 900)
-
         self.main_widget = QWidget(self)
         self.setCentralWidget(self.main_widget)
         main_layout = QHBoxLayout(self.main_widget)
-
         left_layout = QVBoxLayout()
         main_layout.addLayout(left_layout)
-
         right_layout = QVBoxLayout()
         main_layout.addLayout(right_layout)
-        self.symbol_input = QLineEdit("AAPL", self)
+        
+        self.symbol_input = QLineEdit("AAPL,GOOGL", self)
         self.start_capital = QLineEdit("1000", self)
         self.start_input = QLineEdit("2024-03-20", self)
         self.end_input = QLineEdit("2024-03-21", self)
@@ -32,11 +28,10 @@ class MainWindow(QMainWindow):
         self.load_button = QPushButton('Start', self)
         self.load_button.clicked.connect(self.load_data)
 
-        left_layout.addWidget(QLabel("Symbol:"))
+        left_layout.addWidget(QLabel("Symbols:"))
         left_layout.addWidget(self.symbol_input)
-        left_layout.addWidget(QLabel("Starting capital:"))
+        left_layout.addWidget(QLabel("Starting Capital:"))
         left_layout.addWidget(self.start_capital)
-
         left_layout.addWidget(QLabel("Start Date (YYYY-MM-DD):"))
         left_layout.addWidget(self.start_input)
         left_layout.addWidget(QLabel("End Date (YYYY-MM-DD):"))
@@ -44,9 +39,12 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(QLabel("Time Frame:"))
         left_layout.addWidget(self.time_frame_input)
         left_layout.addWidget(self.load_button)
+        main_layout.setStretch(0, 1)  # Give less space to control panel
+        main_layout.setStretch(1, 5)  # Give more space to graph
+        
 
         self.speed_slider = QSlider(Qt.Horizontal, self)
-        self.speed_slider.setMaximumWidth(200)  
+        self.speed_slider.setMaximumWidth(200)
         self.speed_slider.setMinimum(1)
         self.speed_slider.setMaximum(1000)
         self.speed_slider.setValue(100)
@@ -57,81 +55,86 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.market_plot)
 
         self.info_label = QLabel("Holding: \nTotal Value: ", self)
-        font = QFont() 
+        font = QFont()
         font.setPointSize(18)
         self.info_label.setFont(font)
-
         left_layout.addWidget(self.info_label)
+
+        # New stock selection dropdown setup
+        self.stock_selection = QComboBox(self)
+        left_layout.addWidget(QLabel("Select Stock:"))
+        left_layout.addWidget(self.stock_selection)
+        self.stock_selection.currentTextChanged.connect(self.on_stock_selection_changed)
 
         self.text_window = QTextEdit(self)
         self.text_window.setReadOnly(True)
-        self.text_window.setMaximumWidth(400)  
+        self.text_window.setMaximumWidth(400)
         right_layout.addWidget(self.text_window)
-        self.data_feeder = None
-        self.manager = None
+
+        self.data_feeders = {}
+        self.manager = Trader(initial_capital=float(self.start_capital.text()))
 
         self.speed_slider.valueChanged.connect(self.adjust_speed)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_data)
 
-    def load_data(self):
-        try:
-            self.market_plot.reset()
-            symbol = self.symbol_input.text()
-            start_date = self.start_input.text()
-            end_date = self.end_input.text()
-            time_frame = self.time_frame_input.currentText()
-            starting_capital = float(self.start_capital.text())
 
-            self.data_feeder = DataFeeder(symbol, start_date, end_date, time_frame)
-            if self.data_feeder.data.empty:
+    def load_data(self):
+        self.market_plot.reset()
+        symbol = []
+        symbols = self.symbol_input.text().split(",")
+        start_date = self.start_input.text()
+        end_date = self.end_input.text()
+        time_frame = self.time_frame_input.currentText()
+
+        for symbol in symbols:
+            self.manager.addStock(symbol)  # Add stock to Trader
+            self.data_feeders[symbol] = DataFeeder(symbol, start_date, end_date, time_frame)
+            if self.data_feeders[symbol].data.empty:
                 self.text_window.append(f"Error loading data for {symbol}")
                 return
 
-            self.manager = Trader(initial_capital=starting_capital)
-            self.manager.addStock(symbol)
+        self.text_window.append(f"Data loaded successfully for symbols: {', '.join(symbols)}")
+        self.stock_selection.clear()
+        self.stock_selection.addItems(symbols) 
+        if symbols:
+            self.stock_selection.setCurrentIndex(0) 
+        self.start_simulation()
 
 
-            self.text_window.append("Data loaded successfully for symbol: {}".format(symbol))
+    def update_data(self):        
+        for symbol, feeder in self.data_feeders.items():
+            row = feeder.getNextRow()
+            if row is not None:
+                self.manager.distributeData(
+                    stock=symbol, 
+                    Datetime=row.name,
+                    Open=row['Open'],
+                    High=row['High'],
+                    Low=row['Low'],
+                    Close=row['Close'],  
+                    Volume=row['Volume'],
+                )
+            # else:
+                # self.manager.saveActions()
 
-            self.start_simulation()
-            
-        except Exception as e:
-            print("Error loading data: {}".format(str(e)))
-
-
-    def update_data(self):
-        try:
-            df = self.traderCycle()
-            if df is not False:
-                self.market_plot.plot(df)
-                total_value = self.manager.calculateTotalValue()
-                holding = self.manager.getHolding(self.symbol_input.text())
-                self.info_label.setText(f"Holding: {holding}\nTotal Value: ${total_value:,.2f}")
-        except Exception as e:
-            print("Error updating data: {}".format(str(e)))
-
+        self.update_gui_for_stock(self.stock_selection.currentText())
 
 
-    def traderCycle(self):
-        row = self.data_feeder.getNextRow()
-        if row is not None:
-            self.manager.distributeData(
-                stock=self.symbol_input.text(), 
-                Datetime=row.name,
-                Open=row['Open'],
-                High=row['High'],
-                Low=row['Low'],
-                Close=row['Close'],  
-                Volume=row['Volume'],  
-            )
-        else:
-            self.manager.saveActions()
-            return False
-        
-        dataF = self.manager.getLiveDataFrame().getFrame()
-        return dataF
-    
+    def update_gui_for_stock(self, symbol):
+        if symbol in self.data_feeders: 
+            total_value = self.manager.calculateTotalValue()
+            holding = self.manager.getHolding(symbol) 
+            self.info_label.setText(f"Holding for {symbol}: {holding}           Total Value: ${total_value:,.2f}")
+            df = self.manager.getLiveDataFrame(symbol)
+        if df.shape[0] >= 2:
+                self.market_plot.plot(df, mav=9)
+
+    def on_stock_selection_changed(self):
+        selected_symbol = self.stock_selection.currentText()
+        if selected_symbol in self.data_feeders:
+            self.update_gui_for_stock(selected_symbol)
+       
 
     def start_simulation(self):
         self.timer.setInterval(self.speed_slider.value())

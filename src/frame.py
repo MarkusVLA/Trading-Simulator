@@ -3,7 +3,7 @@ import pandas as pd
 class TradeFrame:
     
     def __init__(self):
-        self.columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Signal', 'Capital', 'Holding']
+        self.columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Signal', 'Action', 'Capital', 'Holding']
         self.frame = pd.DataFrame(columns=self.columns)
         self.frame.index.name = 'Datetime'
 
